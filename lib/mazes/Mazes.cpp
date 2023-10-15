@@ -57,6 +57,7 @@ void Maze::generate() {
             walls_down[cell1x][cell1y] = false;
         }
     }
+    // TODO: make sure this is not the same pair of cells as another maze
     references[0] = random_cell();
     references[1] = random_cell();
 }
