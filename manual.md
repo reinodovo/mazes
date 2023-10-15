@@ -6,4 +6,4 @@
 - The defuser must navigate the white light to the red light using the arrow buttons.
 - Warning: Do not cross the lines shown in the maze. These lines are invisible on the bomb.
 
-<div style="text-align:center;"><img src="./mazes.svg" alt="Alt Text" /></div>
+<img src="./mazes.svg" alt="Mazes" width=700 style="padding-left:45px;"/>
