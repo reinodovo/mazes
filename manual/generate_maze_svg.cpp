@@ -55,7 +55,7 @@ void generate_svg(Maze* mazes) {
 }
 
 int main(int argc, char** argv) {
-    freopen("mazes.svg", "w", stdout);
+    freopen("./manual/mazes.svg", "w", stdout);
     int seed = atoi(argv[1]);
     Maze* mazes = generate_mazes(seed);
     generate_svg(mazes);
