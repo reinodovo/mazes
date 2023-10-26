@@ -1,85 +1,77 @@
 #include <Arduino.h>
+#include <Mazes.h>
 
-const int CHANNELS = 3;
+#include "maze.h"
+#include "button.h"
 
-const int RED_PINS[CHANNELS] = {25, 14, 2};
-const int GREEN_PINS[CHANNELS] = {33, 27, 15};
-const int BLUE_PINS[CHANNELS] = {32, 26, 13};
+Maze maze;
+Cell target, current;
 
-const int CLOCK = 19, STORE = 18, SER = 5;
+const int BUTTONS = 4;
+int BUTTON_PINS[BUTTONS] = {36, 35, 39, 34};
+Button btns[BUTTONS];
 
-const int GRID_SIZE = 6;
-
-const int ROW_GROUPS = 12;
-const uint16_t ROW_GROUPS_SERIAL[ROW_GROUPS] = {
-    0b0100000000000000,
-    0b0010000000000000,
-    0b0001000000000000,
-    0b0000100000000000,
-    0b0000010000000000,
-    0b0000001000000000,
-    0b0000000001000000,
-    0b0000000000100000,
-    0b0000000000010000,
-    0b0000000000001000,
-    0b0000000000000100,
-    0b0000000000000010
-};
-
-void send(uint16_t data) {
-    shiftOut(SER, CLOCK, LSBFIRST, data);
-    shiftOut(SER, CLOCK, LSBFIRST, data >> 8);
-    digitalWrite(STORE, HIGH);
-    digitalWrite(STORE, LOW);
+int int_abs(int x) {
+    return x < 0 ? -x : x;
 }
 
-void set(int row, int col, int red, int green, int blue) {
-    int row_group = (row * 2) + (col / 3);
-    int row_group_serial = ROW_GROUPS_SERIAL[row_group];
-    for (int i = 0; i < CHANNELS; i++) {
-        digitalWrite(RED_PINS[i], HIGH);
-        digitalWrite(GREEN_PINS[i], HIGH);
-        digitalWrite(BLUE_PINS[i], HIGH);
-    }
-    send(row_group_serial);
-    int channel = col % 3;
-    digitalWrite(RED_PINS[channel], red ? LOW : HIGH);
-    digitalWrite(GREEN_PINS[channel], green ? LOW : HIGH);
-    digitalWrite(BLUE_PINS[channel], blue ? LOW : HIGH);
+Cell generate_random_cell() {
+    int x = int_abs(esp_random()) % MAZE_SIZE;
+    int y = int_abs(esp_random()) % MAZE_SIZE;
+    return {x, y};
+}
+
+void left(ButtonState state) {
+    if (state != ButtonState::Pressed) return;
+    current.x = (current.x + MAZE_SIZE - 1) % MAZE_SIZE;
+}
+
+void right(ButtonState state) {
+    if (state != ButtonState::Pressed) return;
+    current.x = (current.x + 1) % MAZE_SIZE;
+}
+
+void up(ButtonState state) {
+    if (state != ButtonState::Pressed) return;
+    current.y = (current.y + MAZE_SIZE - 1) % MAZE_SIZE;
+}
+
+void down(ButtonState state) {
+    if (state != ButtonState::Pressed) return;
+    current.y = (current.y + 1) % MAZE_SIZE;
 }
 
 void setup() {
     pinMode(CLOCK, OUTPUT);
     pinMode(STORE, OUTPUT);
     pinMode(SER, OUTPUT);
-
+    for (int i = 0; i < BUTTONS; i++) {
+        pinMode(BUTTON_PINS[i], INPUT);
+    }
     for (int i = 0; i < CHANNELS; i++) {
         pinMode(RED_PINS[i], OUTPUT);
         pinMode(GREEN_PINS[i], OUTPUT);
         pinMode(BLUE_PINS[i], OUTPUT);
-        digitalWrite(RED_PINS[i], LOW);
-        digitalWrite(GREEN_PINS[i], LOW);
-        digitalWrite(BLUE_PINS[i], LOW);
+        digitalWrite(RED_PINS[i], HIGH);
+        digitalWrite(GREEN_PINS[i], HIGH);
+        digitalWrite(BLUE_PINS[i], HIGH);
     }
+    Maze* mazes = generate_mazes(0);
+    maze = mazes[esp_random() % NUMBER_OF_MAZES];
+    target = generate_random_cell();
+    current = generate_random_cell();
+    MazeDisplay::init(maze, target);
+    MazeDisplay::set_current(current);
+    btns[0].init(BUTTON_PINS[0], left);
+    btns[1].init(BUTTON_PINS[1], right);
+    btns[2].init(BUTTON_PINS[2], up);
+    btns[3].init(BUTTON_PINS[3], down);
 }
 
 void loop() {
-    for (int row = 0; row < GRID_SIZE; row++) {
-        for (int col = 0; col < GRID_SIZE; col++) {
-            set(row, col, 1, 0, 0);
-            delay(20);
-        }
+    MazeDisplay::update();
+    for (int i = 0; i < BUTTONS; i++) {
+        btns[i].update();
     }
-    for (int row = 0; row < GRID_SIZE; row++) {
-        for (int col = 0; col < GRID_SIZE; col++) {
-            set(row, col, 0, 1, 0);
-            delay(20);
-        }
-    }
-    for (int row = 0; row < GRID_SIZE; row++) {
-        for (int col = 0; col < GRID_SIZE; col++) {
-            set(row, col, 0, 0, 1);
-            delay(20);
-        }
-    }
+    MazeDisplay::set_current(current);
 }
