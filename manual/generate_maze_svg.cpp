@@ -45,7 +45,8 @@ void generate_maze_svg(Maze maze, int offx, int offy) {
 }
 
 void generate_svg(Maze* mazes) {
-    printf("<svg baseProfile=\"tiny\" height=\"%d\" version=\"1.2\" width=\"%d\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:ev=\"http://www.w3.org/2001/xml-events\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">", SIZE * 4, SIZE * 4);
+    int sz = (SIZE + 20) * 3;
+    printf("<svg baseProfile=\"tiny\" height=\"%d\" version=\"1.2\" width=\"%d\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:ev=\"http://www.w3.org/2001/xml-events\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">", sz, sz);
     for (int i = 0; i < NUMBER_OF_MAZES; i++) {
         int offx = (SIZE + 20) * (i % 3) + 5;
         int offy = (SIZE + 20) * (i / 3) + 5;
