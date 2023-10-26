@@ -56,6 +56,14 @@ void set(int col, int row, int color) {
     digitalWrite(BLUE_PINS[channel], color == BLUE ? LOW : HIGH);
 }
 
+void off() {
+    for (int i = 0; i < CHANNELS; i++) {
+        digitalWrite(RED_PINS[i], HIGH);
+        digitalWrite(GREEN_PINS[i], HIGH);
+        digitalWrite(BLUE_PINS[i], HIGH);
+    }
+}
+
 namespace MazeDisplay {
     bool color[COLORS][MAZE_SIZE][MAZE_SIZE];
     Cell relevant_cells[RELEVANT_CELLS];
@@ -85,18 +93,15 @@ namespace MazeDisplay {
         current = c;
         relevant_cells[CURRENT] = current;
         color[BLUE][current.x][current.y] = true;
-        if (current.x == target.x && current.y == target.y)
-            color[RED][target.x][target.y] = false;
     }
 
     void update() {
         unsigned long now = millis();
         int index = (now / CELL_PERIOD_MS) % RELEVANT_CELLS;
         if (index == last_cell_index) return;
-        set(relevant_cells[last_cell_index].x, relevant_cells[last_cell_index].y, -1);
+        off();
         last_cell_index = index;
         Cell cell = relevant_cells[index];
-        int color_index = (now / COLOR_PERIOD_MS) % 2;
         int found_colors = 0;
         int colors[COLORS];
         for (int i = 0; i < COLORS; i++) {
@@ -104,12 +109,9 @@ namespace MazeDisplay {
                 colors[found_colors++] = i;
             }
         }
-        if (found_colors == 1) {
-            set(cell.x, cell.y, colors[0]);
-        } else if (found_colors == 2) {
+        if (found_colors != 0) {
+            int color_index = (now / COLOR_PERIOD_MS) % found_colors;
             set(cell.x, cell.y, colors[color_index]);
-        } else {
-            set(cell.x, cell.y, -1);
         }
     }
 };

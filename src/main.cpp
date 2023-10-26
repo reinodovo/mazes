@@ -1,44 +1,68 @@
 #include <Arduino.h>
+#include <PuzzleModule.h>
 #include <Mazes.h>
+#include <utils/Button.h>
 
 #include "maze.h"
-#include "button.h"
 
 Maze maze;
 Cell target, current;
 
+bool hit_wall(Cell initial, Cell final) {
+    if (initial.x == final.x) {
+        return maze.walls_down[initial.x][min(initial.y, final.y)];
+    } else {
+        return maze.walls_right[min(initial.x, final.x)][initial.y];
+    }
+}
+
 const int BUTTONS = 4;
 int BUTTON_PINS[BUTTONS] = {36, 35, 39, 34};
 Button btns[BUTTONS];
+enum Direction {
+    Left,
+    Right,
+    Up,
+    Down
+};
 
-int int_abs(int x) {
-    return x < 0 ? -x : x;
-}
+struct ButtonFunction {
+    Direction direction;
+    void operator() (State state) {
+        if (state != State::PRESSED) return;
+        int x = direction == Left ? -1 : direction == Right ? 1 : 0;
+        int y = direction == Up ? -1 : direction == Down ? 1 : 0;
+        x = min(max(0, current.x + x), MAZE_SIZE - 1);
+        y = min(max(0, current.y + y), MAZE_SIZE - 1);
+
+        if (hit_wall(current, {x, y})) {
+            PuzzleModule::strike();
+            return;
+        }
+
+        current = {x, y};
+        MazeDisplay::set_current(current);
+
+        if (target.x == current.x && target.y == current.y)
+            PuzzleModule::solve();
+    }
+};
+
+const int RED_PIN = 23, GREEN_PIN = 22;
 
 Cell generate_random_cell() {
-    int x = int_abs(esp_random()) % MAZE_SIZE;
-    int y = int_abs(esp_random()) % MAZE_SIZE;
+    int x = esp_random() % MAZE_SIZE;
+    int y = esp_random() % MAZE_SIZE;
     return {x, y};
 }
 
-void left(ButtonState state) {
-    if (state != ButtonState::Pressed) return;
-    current.x = (current.x + MAZE_SIZE - 1) % MAZE_SIZE;
-}
-
-void right(ButtonState state) {
-    if (state != ButtonState::Pressed) return;
-    current.x = (current.x + 1) % MAZE_SIZE;
-}
-
-void up(ButtonState state) {
-    if (state != ButtonState::Pressed) return;
-    current.y = (current.y + MAZE_SIZE - 1) % MAZE_SIZE;
-}
-
-void down(ButtonState state) {
-    if (state != ButtonState::Pressed) return;
-    current.y = (current.y + 1) % MAZE_SIZE;
+void onSeed(int seed) {
+    Maze* mazes = generate_mazes(seed);
+    maze = mazes[esp_random() % NUMBER_OF_MAZES];
+    target = generate_random_cell();
+    current = generate_random_cell();
+    MazeDisplay::init(maze, target);
+    MazeDisplay::set_current(current);
 }
 
 void setup() {
@@ -47,6 +71,8 @@ void setup() {
     pinMode(SER, OUTPUT);
     for (int i = 0; i < BUTTONS; i++) {
         pinMode(BUTTON_PINS[i], INPUT);
+        btns[i] = Button(BUTTON_PINS[i]);
+        btns[i].onStateChange = ButtonFunction{(Direction)i};
     }
     for (int i = 0; i < CHANNELS; i++) {
         pinMode(RED_PINS[i], OUTPUT);
@@ -56,22 +82,18 @@ void setup() {
         digitalWrite(GREEN_PINS[i], HIGH);
         digitalWrite(BLUE_PINS[i], HIGH);
     }
-    Maze* mazes = generate_mazes(0);
-    maze = mazes[esp_random() % NUMBER_OF_MAZES];
-    target = generate_random_cell();
-    current = generate_random_cell();
-    MazeDisplay::init(maze, target);
-    MazeDisplay::set_current(current);
-    btns[0].init(BUTTON_PINS[0], left);
-    btns[1].init(BUTTON_PINS[1], right);
-    btns[2].init(BUTTON_PINS[2], up);
-    btns[3].init(BUTTON_PINS[3], down);
+
+    PuzzleModule::StatusLight statusLight;
+    statusLight.init(RED_PIN, GREEN_PIN);
+
+    if (!PuzzleModule::init(statusLight, onSeed))
+        ESP.restart();
 }
 
 void loop() {
+    PuzzleModule::update();
     MazeDisplay::update();
     for (int i = 0; i < BUTTONS; i++) {
         btns[i].update();
     }
-    MazeDisplay::set_current(current);
 }
