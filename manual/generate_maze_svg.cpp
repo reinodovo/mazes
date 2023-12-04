@@ -1,13 +1,12 @@
+#include <mazes.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <mazes.hpp>
 
 const int SVG_GRID_SIZE = 3;
 const int SVG_GAP = 20;
 const int WALL_SIZE = 34;
 const int REFERENCE_RADIUS = WALL_SIZE / 3;
-const int CELL_DOT_RADIUS = 10;
+const int CELL_DOT_RADIUS = WALL_SIZE / 10;
 const int BORDER_WIDTH = 3;
 const int MAZE_OFFSET = 5;
 const int WALL_WIDTH = 2;
@@ -55,9 +54,10 @@ void generateMazeSvg(Maze maze, int offx, int offy) {
           offy + j * WALL_SIZE + WALL_SIZE / 2, CELL_DOT_RADIUS);
     }
   }
+  Cell references[2] = {maze.reference.first, maze.reference.second};
   for (int i = 0; i < 2; i++) {
-    int x = maze.references[i].x;
-    int y = maze.references[i].y;
+    int x = references[i].x;
+    int y = references[i].y;
     printf(
         "<circle cx=\"%d\" cy=\"%d\" r=\"%d\" fill=\"none\" stroke=\"black\" "
         "stroke-width=\"1\"/>",

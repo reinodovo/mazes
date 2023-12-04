@@ -2,8 +2,8 @@
 #define MAZE_H
 
 #include <Arduino.h>
+#include <mazes.h>
 
-#include <mazes.hpp>
 #include <utility>
 
 #define COLORS 3
@@ -65,7 +65,13 @@ bool color[COLORS][MAZE_SIZE][MAZE_SIZE];
 Cell relevant_cells[RELEVANT_CELLS];
 int last_cell_index = 0;
 
-void setup(Maze m, Cell t) {
+void clear() {
+  for (int i = 0; i < COLORS; i++)
+    for (int x = 0; x < MAZE_SIZE; x++)
+      for (int y = 0; y < MAZE_SIZE; y++) color[i][x][y] = false;
+}
+
+void setup() {
   pinMode(CLOCK, OUTPUT);
   pinMode(STORE, OUTPUT);
   pinMode(SER, OUTPUT);
@@ -77,20 +83,17 @@ void setup(Maze m, Cell t) {
     digitalWrite(GREEN_PINS[i], HIGH);
     digitalWrite(BLUE_PINS[i], HIGH);
   }
-  for (int i = 0; i < COLORS; i++) {
-    for (int x = 0; x < MAZE_SIZE; x++) {
-      for (int y = 0; y < MAZE_SIZE; y++) {
-        color[i][x][y] = false;
-      }
-    }
-  }
-  relevant_cells[0] = m.references[0];
-  relevant_cells[1] = m.references[1];
+  clear();
+}
+
+void setMaze(Maze m, Cell t) {
+  relevant_cells[0] = m.reference.first;
+  relevant_cells[1] = m.reference.second;
   relevant_cells[2] = t;
   relevant_cells[3] = {0, 0};
   color[RED][t.x][t.y] = true;
-  color[GREEN][m.references[0].x][m.references[0].y] = true;
-  color[GREEN][m.references[1].x][m.references[1].y] = true;
+  color[GREEN][m.reference.first.x][m.reference.first.y] = true;
+  color[GREEN][m.reference.second.x][m.reference.second.y] = true;
 }
 
 void setCurrent(Cell c) {
@@ -103,19 +106,14 @@ void setCurrent(Cell c) {
 void update() {
   unsigned long now = millis();
   int index = (now / CELL_PERIOD_MS) % RELEVANT_CELLS;
-  if (index == last_cell_index) {
-    return;
-  }
+  if (index == last_cell_index) return;
   off();
   last_cell_index = index;
   Cell cell = relevant_cells[index];
   int found_colors = 0;
   int colors[COLORS];
-  for (int i = 0; i < COLORS; i++) {
-    if (color[i][cell.x][cell.y]) {
-      colors[found_colors++] = i;
-    }
-  }
+  for (int i = 0; i < COLORS; i++)
+    if (color[i][cell.x][cell.y]) colors[found_colors++] = i;
   if (found_colors != 0) {
     int color_index = (now / COLOR_PERIOD_MS) % found_colors;
     set(cell.x, cell.y, colors[color_index]);

@@ -1,4 +1,6 @@
-#include <mazes.hpp>
+#include <mazes.h>
+
+#include <vector>
 
 std::mt19937 rng;
 
@@ -11,6 +13,30 @@ Cell randomCell() {
   c.x = random(0, MAZE_SIZE - 1);
   c.y = random(0, MAZE_SIZE - 1);
   return c;
+}
+
+bool Cell::operator==(Cell &o) const { return o.x == x && o.y == y; }
+
+bool compare(Reference r1, Reference r2) {
+  if (r1.first == r2.first && r1.second == r2.second) return true;
+  if (r1.second == r2.first && r1.first == r2.second) return true;
+  return false;
+}
+
+Reference randomReference() {
+  Reference r;
+  r.first = randomCell();
+  do {
+    r.second = randomCell();
+  } while (r.first == r.second);
+  return r;
+}
+
+Reference uniqueReference(std::vector<Reference> &refs) {
+  Reference r = randomReference();
+  for (auto rr : refs)
+    if (compare(r, rr)) return uniqueReference(refs);
+  return r;
 }
 
 int Maze::find(int cell_id) {
@@ -64,16 +90,16 @@ void Maze::generate() {
       walls_down[cell1x][cell1y] = false;
     }
   }
-  // TODO: make sure this is not the same pair of cells as another maze
-  references[0] = randomCell();
-  references[1] = randomCell();
 }
 
 Maze *generateMazes(int code) {
   rng = std::mt19937(code);
   Maze *mazes = new Maze[NUMBER_OF_MAZES];
+  std::vector<Reference> references;
   for (int i = 0; i < NUMBER_OF_MAZES; i++) {
     mazes[i].generate();
+    mazes[i].reference = uniqueReference(references);
+    references.push_back(mazes[i].reference);
   }
   return mazes;
 }
