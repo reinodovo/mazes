@@ -21,7 +21,8 @@ bool hitWall(Cell initial, Cell final) {
 struct ButtonFunction {
   Direction direction;
   void operator()(ButtonState state, ButtonState _) const {
-    if (state != ButtonState::Pressed) return;
+    if (state != ButtonState::Pressed)
+      return;
     int x = direction == Left ? -1 : direction == Right ? 1 : 0;
     int y = direction == Up ? -1 : direction == Down ? 1 : 0;
     x = min(max(0, current.x + x), MAZE_SIZE - 1);
@@ -35,7 +36,8 @@ struct ButtonFunction {
     current = Cell(x, y);
     MazeDisplay::setCurrent(current);
 
-    if (target == current) PuzzleModule::solve();
+    if (target == current)
+      PuzzleModule::solve();
   }
 };
 
@@ -64,12 +66,14 @@ void start() {
 void restart() { MazeDisplay::clear(); }
 
 void setup() {
-  if (!PuzzleModule::setup(PuzzleModule::StatusLight(RED_PIN, GREEN_PIN)))
-    ESP.restart();
+  Module::name = "Mazes";
+  Module::onManualCode = onManualCode;
+  Module::onStart = start;
+  Module::onRestart = restart;
+  PuzzleModule::statusLight = PuzzleModule::StatusLight(RED_PIN, GREEN_PIN);
 
-  PuzzleModule::onManualCode = onManualCode;
-  PuzzleModule::onStart = start;
-  PuzzleModule::onRestart = restart;
+  if (!PuzzleModule::setup())
+    ESP.restart();
 
   for (int i = 0; i < BUTTONS; i++) {
     btns[i] = Button(BUTTON_PINS[i]);
@@ -82,5 +86,6 @@ void setup() {
 void loop() {
   PuzzleModule::update();
   MazeDisplay::update();
-  for (int i = 0; i < BUTTONS; i++) btns[i].update();
+  for (int i = 0; i < BUTTONS; i++)
+    btns[i].update();
 }
