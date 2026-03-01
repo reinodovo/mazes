@@ -29,11 +29,10 @@ const int BLUE_PINS[CHANNELS] = {32, 26, 13};
 const int CLOCK = 19, STORE = 18, SER = 5;
 
 const int ROW_GROUPS = 12;
-const uint16_t ROW_GROUPS_SERIAL[ROW_GROUPS] = {
-    0b0100000000000000, 0b0010000000000000, 0b0001000000000000,
-    0b0000100000000000, 0b0000010000000000, 0b0000001000000000,
-    0b0000000001000000, 0b0000000000100000, 0b0000000000010000,
-    0b0000000000001000, 0b0000000000000100, 0b0000000000000010};
+const uint16_t ROW_GROUPS_SERIAL[ROW_GROUPS] = {0b0100000000000000, 0b0010000000000000, 0b0001000000000000,
+                                                0b0000100000000000, 0b0000010000000000, 0b0000001000000000,
+                                                0b0000000001000000, 0b0000000000100000, 0b0000000000010000,
+                                                0b0000000000001000, 0b0000000000000100, 0b0000000000000010};
 
 void send(uint16_t data) {
   shiftOut(SER, CLOCK, LSBFIRST, data);
@@ -86,7 +85,7 @@ void setup() {
   clear();
 }
 
-void setMaze(Maze m, Cell t) {
+void set_maze(Maze m, Cell t) {
   relevant_cells[0] = m.reference.first;
   relevant_cells[1] = m.reference.second;
   relevant_cells[2] = t;
@@ -96,7 +95,7 @@ void setMaze(Maze m, Cell t) {
   color[GREEN][m.reference.second.x][m.reference.second.y] = true;
 }
 
-void setCurrent(Cell c) {
+void set_current(Cell c) {
   Cell old = relevant_cells[CURRENT];
   color[BLUE][old.x][old.y] = false;
   relevant_cells[CURRENT] = c;

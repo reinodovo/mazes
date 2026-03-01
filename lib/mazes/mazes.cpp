@@ -8,14 +8,14 @@ long random(long a, long b) { return rng() % (b - a + 1) + a; }
 
 int cell(int x, int y) { return y * MAZE_SIZE + x; }
 
-Cell randomCell() {
+Cell random_cell() {
   Cell c;
   c.x = random(0, MAZE_SIZE - 1);
   c.y = random(0, MAZE_SIZE - 1);
   return c;
 }
 
-bool Cell::operator==(Cell &o) const { return o.x == x && o.y == y; }
+bool Cell::operator==(Cell& o) const { return o.x == x && o.y == y; }
 
 bool compare(Reference r1, Reference r2) {
   if (r1.first == r2.first && r1.second == r2.second) return true;
@@ -23,25 +23,23 @@ bool compare(Reference r1, Reference r2) {
   return false;
 }
 
-Reference randomReference() {
+Reference random_reference() {
   Reference r;
-  r.first = randomCell();
+  r.first = random_cell();
   do {
-    r.second = randomCell();
+    r.second = random_cell();
   } while (r.first == r.second);
   return r;
 }
 
-Reference uniqueReference(std::vector<Reference> &refs) {
-  Reference r = randomReference();
+Reference unique_reference(std::vector<Reference>& refs) {
+  Reference r = random_reference();
   for (auto rr : refs)
-    if (compare(r, rr)) return uniqueReference(refs);
+    if (compare(r, rr)) return unique_reference(refs);
   return r;
 }
 
-int Maze::find(int cell_id) {
-  return (cell_id == _p[cell_id]) ? cell_id : (_p[cell_id] = find(_p[cell_id]));
-}
+int Maze::find(int cell_id) { return (cell_id == _p[cell_id]) ? cell_id : (_p[cell_id] = find(_p[cell_id])); }
 
 bool Maze::join(int cell_id_1, int cell_id_2) {
   if ((cell_id_1 = find(cell_id_1)) == (cell_id_2 = find(cell_id_2))) {
@@ -92,13 +90,13 @@ void Maze::generate() {
   }
 }
 
-Maze *generateMazes(int code) {
+std::vector<Maze> generate_mazes(int code) {
   rng = std::mt19937(code);
-  Maze *mazes = new Maze[NUMBER_OF_MAZES];
+  std::vector<Maze> mazes(NUMBER_OF_MAZES);
   std::vector<Reference> references;
   for (int i = 0; i < NUMBER_OF_MAZES; i++) {
     mazes[i].generate();
-    mazes[i].reference = uniqueReference(references);
+    mazes[i].reference = unique_reference(references);
     references.push_back(mazes[i].reference);
   }
   return mazes;

@@ -3,6 +3,7 @@
 
 #include <random>
 #include <utility>
+#include <vector>
 
 const int NUMBER_OF_MAZES = 9;
 const int MAZE_SIZE = 6;
@@ -31,6 +32,6 @@ struct Maze {
   bool join(int cell_id_1, int cell_id_2);
 };
 
-Maze* generateMazes(int code);
+std::vector<Maze> generate_mazes(int code);
 
 #endif  // MAZES_H
